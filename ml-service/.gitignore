@@ -1,0 +1,108 @@
+# =========================
+# GLOBAL
+# =========================
+.env
+.env.local
+.env.*.local
+
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.DS_Store
+Thumbs.db
+
+# =========================
+# NODE / BACKEND
+# =========================
+node_modules/
+dist/
+build/
+coverage/
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Runtime
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# =========================
+# FRONTEND (React/Vite/Next)
+# =========================
+.next/
+out/
+.vercel/
+
+vite.svg
+
+# =========================
+# PYTHON / ML SERVICE
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+
+# ML Models & Large Files
+models/
+checkpoints/
+weights/
+*.h5
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.pickle
+*.pkl
+
+# Dataset files
+data/
+datasets/
+
+# ML cache
+.mlflow/
+wandb/
+
+# =========================
+# DATABASE
+# =========================
+*.sqlite
+*.db
+
+# =========================
+# IDE / EDITOR
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# TESTING
+# =========================
+coverage/
+htmlcov/
+.pytest_cache/
+
+# =========================
+# OS GENERATED
+# =========================
+Desktop.ini
