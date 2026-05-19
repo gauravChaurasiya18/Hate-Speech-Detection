@@ -4,7 +4,8 @@ const MAX_BULK_ROWS = 200;
 
 const parseUploadedFile = (file) => {
   const content = file.buffer.toString("utf8");
-  if (/\.csv$/i.test(file.originalname) || file.mimetype.includes("csv")) {
+  const mimetype = file.mimetype || "";
+  if (/\.csv$/i.test(file.originalname) || mimetype.includes("csv")) {
     const rows = parse(content, {
       columns: true,
       skip_empty_lines: true,
@@ -26,4 +27,3 @@ const parseUploadedFile = (file) => {
 };
 
 module.exports = parseUploadedFile;
-

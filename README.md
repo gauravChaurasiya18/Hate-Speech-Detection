@@ -19,25 +19,37 @@ ml-service/    Flask model API with preprocessing, inference, explainability, re
 ## Setup
 
 1. Copy `.env.example` to `.env` and update secrets.
-2. Install Node dependencies:
+2. Install dependencies:
 
 ```bash
-npm install
-npm install --workspaces
+npm run install:all
 ```
 
-3. Install Python dependencies:
+For a fresh Python setup on Windows:
 
 ```bash
+py -3.11 -m venv ml-service/.venv
+.\ml-service\.venv\Scripts\Activate.ps1
 python -m pip install -r ml-service/requirements.txt
 ```
 
-4. Start MongoDB locally or set `MONGODB_URI` to your MongoDB Atlas connection string.
-5. Run all services:
+Use Python 3.11 for the ML service. Python 3.12+ may install incompatible
+newer ML packages instead of the pinned stack.
+
+3. Start MongoDB locally or set `MONGODB_URI` to your MongoDB Atlas connection string.
+4. Run all services:
 
 ```bash
 npm run dev
 ```
+
+This single command starts all three development services:
+
+- React/Vite frontend on `http://localhost:5173`
+- Express/Socket.io backend on `http://localhost:5000`
+- Flask ML service on `http://localhost:8000`
+
+Run it from either the repository folder or the nested `Hate-Speech-Detection` folder. MongoDB still needs to be running separately, or the backend will stop while trying to connect to `MONGODB_URI`.
 
 Services:
 
@@ -46,6 +58,17 @@ Services:
 - ML API: `http://localhost:8000`
 
 The first ML request downloads the Hugging Face model, so it can take a moment on a fresh machine.
+
+## Quality Checks
+
+Run the full local check suite:
+
+```bash
+npm run check
+```
+
+This runs backend unit tests, frontend utility tests, ML text-processing tests,
+and the production frontend build.
 
 ## API
 
@@ -63,4 +86,3 @@ The first ML request downloads the Hugging Face model, so it can take a moment o
 - Authentication uses JWTs stored in HTTP-only cookies.
 - CSV/TXT bulk upload is supported on `POST /api/analyze` with multipart field `file`.
 - SHAP-style token contribution data is returned by the ML service. When full SHAP is too expensive for the current runtime, the service blends model confidence with deterministic lexical token attribution rather than returning fake empty explanations.
-

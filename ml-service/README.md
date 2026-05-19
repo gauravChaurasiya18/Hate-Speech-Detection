@@ -4,7 +4,7 @@ Flask API for hate speech detection, toxicity scoring, language detection, safer
 
 ## Requirements
 
-- Python 3.11 or newer
+- Python 3.11
 - Internet access for the first model download from Hugging Face
 
 ## Setup
@@ -20,10 +20,13 @@ Optional, but recommended, use a virtual environment:
 
 ```powershell
 cd ml-service
-python -m venv .venv
+py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 ```
+
+Avoid Python 3.12+ for this service. The pinned PyTorch, Transformers, NumPy,
+Pandas, scikit-learn, and SHAP versions are intended for Python 3.11.
 
 ## Run
 
@@ -122,5 +125,8 @@ python app.py
 ```
 
 - If startup works but prediction is slow, wait for the model load to finish.
+- If startup fails while importing `transformers`, `sklearn`, or `pandas`,
+  check `python --version`. Recreate the virtual environment with Python 3.11,
+  then run `python -m pip install -r requirements.txt` again.
 - If model download fails, check your internet connection and Hugging Face access.
 - If SHAP explanations are too slow, set `ENABLE_SHAP=false`.

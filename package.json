@@ -1,0 +1,19 @@
+{
+  "name": "hate-speech-detection-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Explainable multilingual hate speech detection platform with React, Express, MongoDB, and Flask.",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install && python -m pip install -r ml-service/requirements.txt",
+    "dev": "node scripts/dev.js",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:ml": "python ml-service/app.py",
+    "build": "npm --prefix frontend run build",
+    "test": "npm run test:backend && npm run test:frontend && npm run test:ml",
+    "test:backend": "npm --prefix backend test",
+    "test:frontend": "npm --prefix frontend test",
+    "test:ml": "python -m unittest discover -s ml-service/tests -p \"test_*.py\"",
+    "check": "npm run test && npm run build"
+  }
+}

@@ -19,8 +19,8 @@ const sanitizeValue = (value) => {
 const sanitizeRequest = (req, _res, next) => {
   if (req.body) req.body = sanitizeValue(req.body);
   if (req.params) req.params = sanitizeValue(req.params);
+  if (req.query) req.query = sanitizeValue(req.query);
   next();
 };
 
 module.exports = sanitizeRequest;
-

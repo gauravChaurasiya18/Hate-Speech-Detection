@@ -6,6 +6,7 @@ from preprocessing.language import detect_language
 from inference.lexicon import LEXICON, flattened_terms
 from inference.rewrite import safer_rewrite
 from explainability.shap_explainer import ShapExplainer
+from explainability.token_explainer import build_visual_explanation
 
 
 LABEL_ALIASES = {
@@ -123,7 +124,7 @@ class HateSpeechClassifier:
             probabilities.append([1 - toxic, toxic])
         return np.array(probabilities)
 
-    def analyze(self, raw_text, include_explanation=True):
+    def analyze(self, raw_text, include_explanation=True, deep_explanation=False):
         text = normalize_text(raw_text)
         if not text:
             raise ValueError("Text is required")
@@ -177,7 +178,7 @@ class HateSpeechClassifier:
             known = flattened_terms()
             toxic_words = [word for word in words if known.get(word, 0) >= 0.35][:8]
 
-        if include_explanation:
+        if include_explanation and deep_explanation:
             _, tokenizer, _ = provider.get()
             if self._explainer is None:
                 self._explainer = ShapExplainer(self._predict_probability, tokenizer)
@@ -185,12 +186,16 @@ class HateSpeechClassifier:
         else:
             explanation = ShapExplainer().explain(text, toxicity)
 
+        visual_explanation = build_visual_explanation(text, categories, toxic_words, explanation, toxicity)
+        confidence = float(toxicity if prediction != "non_toxic" else max(model_scores.get("non_toxic", 1 - toxicity), 1 - toxicity))
+
         return {
             "prediction": prediction,
-            "confidence": round(float(toxicity if prediction != "non_toxic" else max(model_scores.get("non_toxic", 1 - toxicity), 1 - toxicity)), 4),
+            "confidence": round(confidence, 4),
             "categories": categories,
             "toxic_words": toxic_words,
             "shap_explanation": explanation,
+            "explanation": visual_explanation,
             "language": detect_language(text),
             "safer_rewrite": safer_rewrite(text, prediction, toxic_words),
         }

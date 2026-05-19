@@ -10,6 +10,7 @@ const sanitizeRequest = require("./middleware/securityMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const analysisRoutes = require("./routes/analysisRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
 const app = express();
@@ -18,7 +19,7 @@ app.set("trust proxy", 1);
 app.use(helmet());
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin: true,
     credentials: true,
     methods: ["GET", "POST", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
@@ -49,6 +50,7 @@ app.get("/api/health", (_req, res) => res.json({ success: true, service: "backen
 app.use("/api/auth", authRoutes);
 app.use("/api", analysisRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

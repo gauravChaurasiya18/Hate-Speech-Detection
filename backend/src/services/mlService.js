@@ -9,7 +9,11 @@ const client = axios.create({
 
 const analyzeText = async (text, options = {}) => {
   try {
-    const { data } = await client.post("/predict", { text, explain: options.explain !== false });
+    const { data } = await client.post("/predict", {
+      text,
+      explain: options.explain !== false,
+      deep_explain: options.deepExplain === true
+    });
     return data;
   } catch (error) {
     const message = error.response?.data?.error || error.message || "ML service unavailable";

@@ -1,3 +1,12 @@
+import sys
+
+if sys.version_info >= (3, 12):
+    raise RuntimeError(
+        "The ML service requires Python 3.11. "
+        "Python 3.12+ cannot install the pinned PyTorch/Transformers stack reliably. "
+        "Create a fresh Python 3.11 virtual environment and reinstall ml-service/requirements.txt."
+    )
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from config import ML_PORT, HF_MODEL_ID
@@ -17,8 +26,9 @@ def predict():
     payload = request.get_json(silent=True) or {}
     text = payload.get("text", "")
     include_explanation = payload.get("explain", True) is not False
+    deep_explanation = payload.get("deep_explain", False) is True
     try:
-        result = classifier.analyze(text, include_explanation=include_explanation)
+        result = classifier.analyze(text, include_explanation=include_explanation, deep_explanation=deep_explanation)
         return jsonify(result)
     except ValueError as error:
         return jsonify({"error": str(error)}), 400

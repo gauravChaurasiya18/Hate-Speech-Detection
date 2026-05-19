@@ -6,10 +6,10 @@ import { useDebounce } from "../hooks/useDebounce";
 import { Button } from "../components/Button";
 import { FileUpload } from "../components/FileUpload";
 import { GlassCard } from "../components/GlassCard";
-import { HighlightedText } from "../components/HighlightedText";
 import { LoadingSkeleton } from "../components/LoadingSkeleton";
 import { ProgressBar } from "../components/ProgressBar";
 import { ToxicityMeter } from "../components/ToxicityMeter";
+import { ExplainabilityDashboard } from "../components/explainability/ExplainabilityDashboard";
 import { labelName } from "../utils/format";
 
 const AnalyzerPage = () => {
@@ -23,13 +23,19 @@ const AnalyzerPage = () => {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     const runLive = async () => {
+      if (!debouncedText.trim()) {
+        setResult(null);
+        return;
+      }
       if (debouncedText.trim().length < 5) return;
       setLiveLoading(true);
       try {
-        const data = await analyzeText(debouncedText, { save: false, explain: false });
+        const data = await analyzeText(debouncedText, { save: false, explain: false, signal: controller.signal });
         if (active) setResult(data.result);
-      } catch {
+      } catch (err) {
+        if (err.name === "CanceledError" || err.name === "AbortError") return;
         // Live analysis stays quiet so the typing experience does not become noisy.
       } finally {
         if (active) setLiveLoading(false);
@@ -38,6 +44,7 @@ const AnalyzerPage = () => {
     runLive();
     return () => {
       active = false;
+      controller.abort();
     };
   }, [debouncedText]);
 
@@ -130,12 +137,9 @@ const AnalyzerPage = () => {
         </GlassCard>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <GlassCard>
-          <h2 className="mb-4 text-xl font-black text-white">Highlighted evidence</h2>
-          <HighlightedText text={result?.text || text} words={result?.toxicWords || []} />
-        </GlassCard>
+      <ExplainabilityDashboard result={result} text={text} loading={loading || liveLoading} />
 
+      <div className="grid gap-6">
         <GlassCard>
           <div className="mb-4 flex items-center gap-2">
             <WandSparkles className="h-5 w-5 text-lime-300" />
@@ -146,24 +150,6 @@ const AnalyzerPage = () => {
           </p>
         </GlassCard>
       </div>
-
-      <GlassCard>
-        <h2 className="mb-4 text-xl font-black text-white">SHAP explanation</h2>
-        <div className="grid gap-3 md:grid-cols-2">
-          {(result?.shapExplanation || []).map((item) => (
-            <div key={`${item.token}-${item.score}`} className="rounded-xl border border-white/10 bg-slate-950/60 p-3">
-              <div className="mb-2 flex justify-between text-sm">
-                <span className="font-semibold text-white">{item.token}</span>
-                <span className={item.polarity === "safe" ? "text-lime-200" : "text-rose-200"}>{item.score}</span>
-              </div>
-              <div className="h-2 rounded-full bg-white/10">
-                <div className={item.polarity === "safe" ? "h-2 rounded-full bg-lime-300" : "h-2 rounded-full bg-rose-400"} style={{ width: `${Math.min(100, item.score * 100)}%` }} />
-              </div>
-            </div>
-          ))}
-          {!result?.shapExplanation?.length && <p className="text-sm text-slate-400">No high-impact token contributions yet.</p>}
-        </div>
-      </GlassCard>
 
       {bulkResults.length > 0 && (
         <GlassCard>

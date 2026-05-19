@@ -2,11 +2,17 @@ import api from "./api";
 
 export const analyzeText = (text, options = {}) =>
   api
-    .post("/analyze", {
-      text,
-      save: options.save ?? true,
-      explain: options.explain ?? true
-    })
+    .post(
+      "/analyze",
+      {
+        text,
+        save: options.save ?? true,
+        explain: options.explain ?? true
+      },
+      {
+        signal: options.signal
+      }
+    )
     .then((res) => res.data);
 
 export const uploadFile = (file) => {

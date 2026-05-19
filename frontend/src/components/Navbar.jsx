@@ -7,6 +7,7 @@ import { cn } from "../utils/cn";
 
 const appLinks = [
   ["Analyzer", "/analyzer"],
+  ["Live Chat", "/moderation-chat"],
   ["Dashboard", "/dashboard"],
   ["History", "/history"],
   ["Profile", "/profile"]
@@ -91,4 +92,3 @@ export const Navbar = ({ app = false }) => {
     </header>
   );
 };
-
