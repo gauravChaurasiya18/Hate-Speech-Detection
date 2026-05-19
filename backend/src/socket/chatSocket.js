@@ -14,6 +14,25 @@ const SEND_LIMIT = 8;
 
 const roomUsers = new Map();
 
+const configuredOrigins = () =>
+  String(env.clientUrl || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+const isLocalDevOrigin = (origin) => {
+  if (env.nodeEnv === "production") return false;
+
+  try {
+    const url = new URL(origin);
+    return ["localhost", "127.0.0.1", "::1"].includes(url.hostname) && ["http:", "https:"].includes(url.protocol);
+  } catch {
+    return false;
+  }
+};
+
+const isAllowedOrigin = (origin) => !origin || configuredOrigins().includes(origin) || isLocalDevOrigin(origin);
+
 const parseCookies = (cookieHeader = "") =>
   cookieHeader.split(";").reduce((cookies, pair) => {
     const [rawKey, ...rawValue] = pair.trim().split("=");
@@ -73,7 +92,10 @@ const withinSendRate = (socket) => {
 const setupChatSocket = (httpServer, app) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: env.clientUrl,
+      origin: (origin, callback) => {
+        if (isAllowedOrigin(origin)) return callback(null, true);
+        return callback(new Error("Socket origin is not allowed"));
+      },
       credentials: true,
       methods: ["GET", "POST"]
     },

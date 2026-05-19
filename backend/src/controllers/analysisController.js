@@ -88,10 +88,26 @@ const analyze = asyncHandler(async (req, res) => {
   const source = req.file ? "bulk" : "single";
   const shouldSave = req.user && (req.file || req.body.save !== false);
   const results = [];
+  const blockedTexts = [];
 
   for (const text of texts) {
     const mlResult = await analyzeText(text, { explain: req.body.explain !== false });
     const normalized = normalizeAnalysis(mlResult);
+
+    // Block toxic and hate speech comments
+    const blockedPredictions = ["toxic", "hate_speech"];
+    if (blockedPredictions.includes(mlResult.prediction)) {
+      blockedTexts.push({
+        text,
+        prediction: mlResult.prediction,
+        confidence: mlResult.confidence,
+        reason: mlResult.prediction === "hate_speech" 
+          ? "Hate speech detected - this content cannot be sent"
+          : "Toxic content detected - this content cannot be sent"
+      });
+      continue; // Skip saving and processing this text
+    }
+
     const saved = shouldSave
       ? await AnalysisHistory.create({
           user: req.user._id,
@@ -109,12 +125,20 @@ const analyze = asyncHandler(async (req, res) => {
     });
   }
 
+  // If all texts were blocked, return error
+  if (results.length === 0 && blockedTexts.length > 0) {
+    throw new ApiError(400, `${blockedTexts[0].reason}`, {
+      blocked: blockedTexts
+    });
+  }
+
   res.status(201).json({
     success: true,
     mode: source,
     count: results.length,
-    result: results[0],
-    results
+    result: results[0] || null,
+    results,
+    ...(blockedTexts.length > 0 && { blocked: blockedTexts, warning: "Some texts were blocked due to policy violation" })
   });
 });
 

@@ -4,11 +4,13 @@ const env = require("./config/env");
 const http = require("http");
 const setupChatSocket = require("./socket/chatSocket");
 const AnalysisHistory = require("./models/AnalysisHistory");
+const ChatMessage = require("./models/ChatMessage");
 
 const start = async () => {
   try {
     await connectDB();
     await AnalysisHistory.ensureAppIndexes();
+    await ChatMessage.ensureAppIndexes();
     const server = http.createServer(app);
     setupChatSocket(server, app);
 

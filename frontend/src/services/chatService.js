@@ -7,7 +7,8 @@ export const socketBase = import.meta.env.VITE_SOCKET_URL || apiBase.replace(/\/
 export const createChatSocket = () =>
   io(socketBase, {
     withCredentials: true,
-    transports: ["websocket", "polling"]
+    transports: ["polling", "websocket"],
+    timeout: 10000
   });
 
 export const getRoomMessages = (room, params = {}) => api.get(`/chat/rooms/${room}/messages`, { params }).then((res) => res.data);

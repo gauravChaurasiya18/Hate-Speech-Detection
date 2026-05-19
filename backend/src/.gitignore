@@ -64,7 +64,8 @@ dist/
 build/
 
 # ML Models & Large Files
-models/
+../../models/
+../../ml-service/models/
 checkpoints/
 weights/
 *.h5

@@ -1,6 +1,7 @@
 const express = require("express");
 const { analyze, history, deleteHistory, analysisValidators } = require("../controllers/analysisController");
 const { protect, optionalProtect } = require("../middleware/authMiddleware");
+const { validateContentSafety } = require("../middleware/contentValidationMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
@@ -17,7 +18,8 @@ router.get("/analyze", (_req, res) =>
 );
 
 // Public endpoint for testing/demo. If a valid auth cookie exists, saved analyses are attached to that user.
-router.post("/analyze", optionalProtect, upload.single("file"), analysisValidators.analyze, analyze);
+// Validates content safety before processing
+router.post("/analyze", optionalProtect, upload.single("file"), analysisValidators.analyze, validateContentSafety, analyze);
 // Protected endpoints for saving history
 router.get("/history", protect, analysisValidators.history, history);
 router.delete("/history/:id", protect, analysisValidators.id, deleteHistory);

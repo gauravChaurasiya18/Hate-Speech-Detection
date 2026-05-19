@@ -26,7 +26,8 @@ env/
 htmlcov/
 
 # ML artifacts
-models/
+/models/
+ml-service/models/
 checkpoints/
 weights/
 *.h5

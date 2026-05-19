@@ -2,13 +2,31 @@ import re
 from inference.lexicon import flattened_terms
 from preprocessing.cleaner import tokenize_words
 
+# Context-aware replacement suggestions
+WORD_REPLACEMENTS = {
+    "hate": "dislike",
+    "kill": "harm",
+    "stupid": "misguided",
+    "idiot": "person",
+    "fool": "person",
+    "trash": "garbage",
+    "scum": "person",
+    "deserves": "should",
+    "parasite": "burden",
+    "invade": "enter",
+    "infest": "populate",
+    "disease": "problem",
+    "virus": "issue",
+    "cancer": "problem",
+}
+
 SAFE_TEMPLATES = {
-    "threat": "I am concerned about this situation and want it handled safely through the right channels.",
-    "hate_speech": "I have concerns about this issue, but I do not want to blame or insult any community.",
-    "offensive": "I disagree with what happened and want to explain my concern respectfully.",
-    "cyberbullying": "I am uncomfortable with this behavior and want the conversation to stay respectful.",
-    "toxic": "I disagree with this, but I want to express my concern respectfully.",
-    "non_toxic": "This message is already written in a relatively safe way.",
+    "threat": "I am concerned about this situation and want it handled safely through proper channels.",
+    "hate_speech": "I have concerns about this issue, but I want to discuss it respectfully without blaming any community.",
+    "offensive": "I disagree with what happened and would like to explain my concern more respectfully.",
+    "cyberbullying": "I am uncomfortable with this behavior and believe the conversation should stay respectful.",
+    "toxic": "I disagree with this sentiment and would like to express my concern more constructively.",
+    "non_toxic": "This message is already expressed in a respectful way.",
 }
 
 GROUP_CONTEXT_TERMS = {
@@ -101,19 +119,52 @@ def _reframe_rewrite(text: str, prediction: str) -> str:
     return f"{concern} {endings.get(prediction, endings['toxic'])}"
 
 
-def safer_rewrite(text: str, prediction: str, toxic_words):
-    if prediction == "non_toxic":
-        return SAFE_TEMPLATES["non_toxic"]
+def _smart_word_replacement(word: str) -> str:
+    """Replace toxic words with contextually appropriate alternatives."""
+    lower_word = word.lower()
+    
+    # Check direct mappings
+    if lower_word in WORD_REPLACEMENTS:
+        return WORD_REPLACEMENTS[lower_word]
+    
+    # Check lemma-based replacements
+    for key, replacement in WORD_REPLACEMENTS.items():
+        if lower_word.startswith(key):
+            return replacement
+    
+    # Fallback to generic replacement
+    return "inappropriate"
 
-    if prediction == "hate_speech" and set(toxic_words) & GROUP_CONTEXT_TERMS:
-        return _group_blame_rewrite(text)
 
+def _replace_toxic_words(text: str, toxic_words: list) -> str:
+    """Replace toxic words with better alternatives while preserving structure."""
     rewritten = text
     for word in sorted(set(toxic_words), key=len, reverse=True):
-        rewritten = re.sub(rf"\b{re.escape(word)}\b", "inappropriate", rewritten, flags=re.IGNORECASE)
+        replacement = _smart_word_replacement(word)
+        rewritten = re.sub(
+            rf"\b{re.escape(word)}\b", 
+            replacement, 
+            rewritten, 
+            flags=re.IGNORECASE
+        )
+    return rewritten
 
-    remaining_terms = set(tokenize_words(rewritten)) & set(flattened_terms().keys())
-    if remaining_terms or len(rewritten) > 180:
-        return _reframe_rewrite(text, prediction)
 
-    return rewritten if rewritten != text else _reframe_rewrite(text, prediction)
+def safer_rewrite(text: str, prediction: str, toxic_words):
+    """Generate a safer rewrite of potentially harmful text while preserving intent."""
+    if prediction == "non_toxic":
+        return text  # Return original if already safe
+
+    # Try intelligent word replacement first
+    rewritten = _replace_toxic_words(text, toxic_words)
+    
+    # If replacement was successful and meaningful, return it
+    if rewritten != text and len(rewritten) >= len(text) * 0.6:
+        return rewritten
+    
+    # For hate speech with group context, use contextual reframing
+    if prediction == "hate_speech" and set(toxic_words) & GROUP_CONTEXT_TERMS:
+        return _group_blame_rewrite(text)
+    
+    # For other cases, use context-aware reframing
+    return _reframe_rewrite(text, prediction)
